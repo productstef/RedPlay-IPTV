@@ -1,9 +1,7 @@
-## RedPlay IPTV 0.6.0
+## RedPlay IPTV 0.6.1
 
-- Added an in-app **Check for updates** button in the bottom-right status area.
-- RedPlay checks the latest GitHub Release and can download/install the newest installer automatically.
-- Update downloads are verified against published SHA-256 checksums before execution.
-- Fixed the **Add IPTV provider** overlay so it stays above the video surface.
-- Removed the unused left navigation rail.
-- When subtitle tracks are available, subtitles are enabled automatically by default, preferring Bulgarian, then English, then the default/first available track.
-- Keeps the global subtitle-size control and privacy changes from the previous builds.
+- Western and Star Wars providers are built into RedPlay by default, so users do not need to add them manually.
+- Existing installs receive the built-in providers through the state defaults migration without wiping user-added providers, favorites, or settings.
+- Fixed the Add IPTV provider form so the native mpv video surface is hidden while the form is open and cannot cover the form.
+- The Add form now behaves as a modal editor: background controls are disabled while it is open and restored when it closes.
+- Keeps automatic subtitle enablement, universal subtitle sizing, privacy protections, and the in-app GitHub updater from 0.6.0.
