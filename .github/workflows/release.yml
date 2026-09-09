@@ -5,10 +5,7 @@ on:
     branches:
       - Software-Engineering
     paths:
-      - VERSION
       - RedPlayIPTV-Source.zip
-      - RELEASE_NOTES.md
-      - .github/workflows/release.yml
   workflow_dispatch:
 
 permissions:
