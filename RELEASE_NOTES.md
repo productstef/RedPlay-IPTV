@@ -1,7 +1,8 @@
-## RedPlay IPTV 0.6.1
+## RedPlay IPTV 0.6.2
 
-- Western and Star Wars providers are built into RedPlay by default, so users do not need to add them manually.
-- Existing installs receive the built-in providers through the state defaults migration without wiping user-added providers, favorites, or settings.
-- Fixed the Add IPTV provider form so the native mpv video surface is hidden while the form is open and cannot cover the form.
-- The Add form now behaves as a modal editor: background controls are disabled while it is open and restored when it closes.
-- Keeps automatic subtitle enablement, universal subtitle sizing, privacy protections, and the in-app GitHub updater from 0.6.0.
+- Rebuilt the **Add IPTV provider** editor as a dedicated modal Windows dialog instead of an overlay made from child controls inside the main player window.
+- The provider dialog is an owned top-level window, so mpv/video child-window z-order can no longer cover or split the form.
+- The main RedPlay window is disabled while the provider dialog is open and restored when it closes.
+- Added proper dialog keyboard routing for Tab navigation and Escape-to-close.
+- Provider validation messages are owned by the provider dialog so they remain above the editor.
+- No changes to playback, playlists, EPG, audio/subtitle selection, built-in Western/Star Wars providers, privacy controls, or updater behavior.
