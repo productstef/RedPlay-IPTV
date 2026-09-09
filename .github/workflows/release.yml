@@ -1,0 +1,90 @@
+name: Build and publish RedPlay
+
+on:
+  push:
+    branches:
+      - Software-Engineering
+    paths:
+      - VERSION
+      - '**.go'
+      - 'assets/**'
+      - 'RELEASE_NOTES.md'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid VERSION: $VERSION" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Skip an already published version
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Test
+        if: steps.existing.outputs.exists != 'true'
+        run: |
+          go test ./...
+          go vet ./...
+
+      - name: Build Windows x64 app and installer
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist cmd/setup/payload
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-H=windowsgui -s -w" -o "dist/RedPlayIPTV-$VERSION.exe" .
+          cp "dist/RedPlayIPTV-$VERSION.exe" cmd/setup/payload/RedPlayIPTV.exe
+          cp assets/RedPlayIcon.ico cmd/setup/payload/RedPlayIcon.ico
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-H=windowsgui -s -w" -o "dist/RedPlayIPTV-Setup-$VERSION.exe" ./cmd/setup
+          (cd dist && sha256sum "RedPlayIPTV-$VERSION.exe" "RedPlayIPTV-Setup-$VERSION.exe" > SHA256SUMS.txt)
+
+      - name: Publish GitHub Release
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" \
+            "dist/RedPlayIPTV-$VERSION.exe" \
+            "dist/RedPlayIPTV-Setup-$VERSION.exe" \
+            "dist/SHA256SUMS.txt" \
+            --target "$GITHUB_SHA" \
+            --title "RedPlay IPTV $VERSION" \
+            --notes-file RELEASE_NOTES.md
