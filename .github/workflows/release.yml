@@ -6,7 +6,6 @@ on:
       - Software-Engineering
     paths:
       - 'RedPlayIPTV-Source*.zip'
-      - '.github/workflows/release.yml'
   workflow_dispatch:
 
 permissions:
@@ -54,7 +53,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          SOURCE="$(find . -maxdepth 1 -type f -name 'RedPlayIPTV-Source*.zip' | sort | head -n 1)"
+          if [[ -f ./RedPlayIPTV-Source.zip ]]; then
+            SOURCE=./RedPlayIPTV-Source.zip
+          else
+            SOURCE="$(find . -maxdepth 1 -type f -name 'RedPlayIPTV-Source*.zip' | sort | head -n 1)"
+          fi
           if [[ -z "$SOURCE" ]]; then
             echo "Upload a RedPlayIPTV-Source*.zip file first." >&2
             exit 1
@@ -70,6 +73,7 @@ jobs:
         run: |
           go test ./...
           go vet ./...
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go vet ./...
 
       - name: Build Windows x64 app and installer
         if: steps.existing.outputs.exists != 'true'
