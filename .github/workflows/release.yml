@@ -6,6 +6,7 @@ on:
       - Software-Engineering
     paths:
       - 'RedPlayIPTV-Source*.zip'
+      - '.github/workflows/release.yml'
   workflow_dispatch:
 
 permissions:
@@ -17,11 +18,14 @@ jobs:
     steps:
       - name: Check out release files
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.23.x'
+          cache: false
 
       - name: Read version
         id: version
@@ -53,29 +57,42 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -f ./RedPlayIPTV-Source.zip ]]; then
+
+          SOURCE="$(git diff-tree --no-commit-id --name-only --diff-filter=AM -r "$GITHUB_SHA" \
+            | grep -E '^RedPlayIPTV-Source.*\.zip$' \
+            | head -n 1 || true)"
+
+          if [[ -z "$SOURCE" && -f ./RedPlayIPTV-Source.zip ]]; then
             SOURCE=./RedPlayIPTV-Source.zip
-          else
-            SOURCE="$(find . -maxdepth 1 -type f -name 'RedPlayIPTV-Source*.zip' | sort | head -n 1)"
           fi
+
           if [[ -z "$SOURCE" ]]; then
-            echo "Upload a RedPlayIPTV-Source*.zip file first." >&2
+            SOURCE="$(for f in RedPlayIPTV-Source*.zip; do
+              [[ -f "$f" ]] || continue
+              printf '%s\t%s\n' "$(git log -1 --format=%ct -- "$f")" "$f"
+            done | sort -nr | head -n 1 | cut -f2-)"
+          fi
+
+          if [[ -z "$SOURCE" || ! -f "$SOURCE" ]]; then
+            echo "No RedPlay source ZIP is present." >&2
             exit 1
           fi
+
           echo "Using source package: $SOURCE"
           rm -rf build
           mkdir build
           unzip -q "$SOURCE" -d build
 
-      - name: Test
+      - name: Test source
         if: steps.existing.outputs.exists != 'true'
         working-directory: build
+        shell: bash
         run: |
+          set -euo pipefail
           go test ./...
           go vet ./...
-          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go vet ./...
 
-      - name: Build Windows x64 app and installer
+      - name: Build and Windows-validate x64 app and installer
         if: steps.existing.outputs.exists != 'true'
         working-directory: build
         env:
@@ -84,10 +101,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist cmd/setup/payload
+
           GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-H=windowsgui -s -w" -o "dist/RedPlayIPTV-$VERSION.exe" .
           cp "dist/RedPlayIPTV-$VERSION.exe" cmd/setup/payload/RedPlayIPTV.exe
           cp assets/RedPlayIcon.ico cmd/setup/payload/RedPlayIcon.ico
+
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go vet ./...
           GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-H=windowsgui -s -w" -o "dist/RedPlayIPTV-Setup-$VERSION.exe" ./cmd/setup
+
           (cd dist && sha256sum "RedPlayIPTV-$VERSION.exe" "RedPlayIPTV-Setup-$VERSION.exe" > SHA256SUMS.txt)
 
       - name: Publish GitHub Release
