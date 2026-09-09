@@ -6,10 +6,9 @@ on:
       - Software-Engineering
     paths:
       - VERSION
-      - '**.go'
-      - 'assets/**'
-      - 'RELEASE_NOTES.md'
-      - '.github/workflows/release.yml'
+      - RedPlayIPTV-Source.zip
+      - RELEASE_NOTES.md
+      - .github/workflows/release.yml
   workflow_dispatch:
 
 permissions:
@@ -19,7 +18,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out source
+      - name: Check out release files
         uses: actions/checkout@v4
 
       - name: Set up Go
@@ -52,14 +51,25 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Require source package
+        if: steps.existing.outputs.exists != 'true'
+        shell: bash
+        run: |
+          test -f RedPlayIPTV-Source.zip || { echo "Upload RedPlayIPTV-Source.zip first." >&2; exit 1; }
+          rm -rf build
+          mkdir build
+          unzip -q RedPlayIPTV-Source.zip -d build
+
       - name: Test
         if: steps.existing.outputs.exists != 'true'
+        working-directory: build
         run: |
           go test ./...
           go vet ./...
 
       - name: Build Windows x64 app and installer
         if: steps.existing.outputs.exists != 'true'
+        working-directory: build
         env:
           VERSION: ${{ steps.version.outputs.version }}
         shell: bash
@@ -82,9 +92,9 @@ jobs:
         run: |
           set -euo pipefail
           gh release create "$TAG" \
-            "dist/RedPlayIPTV-$VERSION.exe" \
-            "dist/RedPlayIPTV-Setup-$VERSION.exe" \
-            "dist/SHA256SUMS.txt" \
+            "build/dist/RedPlayIPTV-$VERSION.exe" \
+            "build/dist/RedPlayIPTV-Setup-$VERSION.exe" \
+            "build/dist/SHA256SUMS.txt" \
             --target "$GITHUB_SHA" \
             --title "RedPlay IPTV $VERSION" \
             --notes-file RELEASE_NOTES.md
