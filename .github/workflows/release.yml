@@ -6,8 +6,6 @@ on:
       - Software-Engineering
     paths:
       - 'RedPlayIPTV-Source*.zip'
-      - 'VERSION'
-      - 'RELEASE_NOTES.md'
       - '.github/workflows/release.yml'
   workflow_dispatch:
 
