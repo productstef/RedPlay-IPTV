@@ -1,6 +1,6 @@
 # Android TV emulator
 
-Create a TV AVD in Android Studio **Device Manager** using a recent Google TV / Android TV API 35-37 x86_64 image. Name it `RedPlay_TV_1080p`.
+Create a TV AVD in Android Studio **Device Manager** using a recent Google TV / Android TV API 35-36 x86_64 image. Name it `RedPlay_TV_1080p`.
 
 Start/build/install/launch in one step:
 `powershell -ExecutionPolicy Bypass -File .\scripts\run-emulator.ps1`
