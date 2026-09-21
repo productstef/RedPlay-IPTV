@@ -17,6 +17,7 @@ import com.redplay.iptv.data.*
 import com.redplay.iptv.player.VlcPlayerController
 import com.redplay.iptv.player.VlcVideoSurface
 
+@Composable
 fun PlayerPanel(
     state: RedPlayUiState,
     playerState: PlayerSnapshot,
@@ -99,7 +100,7 @@ fun RightRail(state: RedPlayUiState, snapshot: PlayerSnapshot, player: VlcPlayer
         Text(now?.title ?: "No EPG data", fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 2)
         if (next != null) Text("Next: ${next.title} • ${formatClock(next.startMillis)}", color = RedPlayMuted, fontSize = 10.sp, maxLines = 1)
         Spacer(Modifier.height(12.dp))
-        TrackSelector("Audio Tracks", snapshot.audioTracts, snapshot.selectedAudio, player::selectAudio)
+        TrackSelector("Audio Tracks", snapshot.audioTracks, snapshot.selectedAudio, player::selectAudio)
         Spacer(Modifier.height(8.dp))
         TrackSelector("Subtitles", snapshot.subtitleTracks, snapshot.selectedSubtitle, player::selectSubtitle)
         Spacer(Modifier.height(8.dp))
@@ -150,5 +151,3 @@ fun FullscreenPlayer(state: RedPlayUiState, player: VlcPlayerController, vm: Red
         }
     }
 }
-
-@Composable
