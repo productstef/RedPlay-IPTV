@@ -21,7 +21,7 @@ Native Android TV port of RedPlay, kept in its own project so the existing Windo
    `powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-gradle.ps1 -Build`
 3. Open the `android-tv` folder in Android Studio.
 
-The bootstrap script downloads Gradle 9.6.0 and generates the official wrapper, so you do not need to install Gradle separately.
+The bootstrap script downloads Gradle 8.13 and generates the official wrapper, so you do not need to install Gradle separately.
 
 ## Daily emulator loop
 
