@@ -6,34 +6,36 @@ $cache = Join-Path $root ".gradle-bootstrap"
 $gradleHome = Join-Path $cache "gradle-$version"
 $zip = Join-Path $cache "gradle-$version-bin.zip"
 
-# Gradle needs a JDK. Android Studio already ships one (JBR), so prefer it
-# when JAVA_HOME/java are not configured globally on Windows.
-$javaExe = $null
-if ($env:JAVA_HOME) {
-    $candidate = Join-Path $env:JAVA_HOME "bin\java.exe"
-    if (Test-Path $candidate) { $javaExe = $candidate }
-}
+# The current Android Studio JBR can be newer than Gradle/AGP supports.
+# RedPlay's Android build is pinned to JDK 17 for predictable Windows + CI builds.
+$jdkRoot = Join-Path $cache "jdk-17"
+$javaExe = Get-ChildItem -Path $jdkRoot -Filter java.exe -Recurse -ErrorAction SilentlyContinue |
+    Where-Object { $_.FullName -match '\bin\java.exe$' } |
+    Select-Object -First 1 -ExpandProperty FullName
+
 if (-not $javaExe) {
-    $javaCommand = Get-Command java.exe -ErrorAction SilentlyContinue
-    if ($javaCommand) { $javaExe = $javaCommand.Source }
+    New-Item -ItemType Directory -Force -Path $cache | Out-Null
+    $jdkZip = Join-Path $cache "jdk17-windows-x64.zip"
+    Write-Host "Downloading JDK 17 for the RedPlay Android build..."
+    Invoke-WebRequest "https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jdk/hotspot/normal/eclipse" -OutFile $jdkZip
+    if (Test-Path $jdkRoot) { Remove-Item $jdkRoot -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $jdkRoot | Out-Null
+    Expand-Archive -Path $jdkZip -DestinationPath $jdkRoot -Force
+    Remove-Item $jdkZip -Force
+
+    $javaExe = Get-ChildItem -Path $jdkRoot -Filter java.exe -Recurse |
+        Where-Object { $_.FullName -match '\bin\java.exe$' } |
+        Select-Object -First 1 -ExpandProperty FullName
 }
+
 if (-not $javaExe) {
-    $studioJbrCandidates = @(
-        (Join-Path $env:ProgramFiles "Android\Android Studio\jbr"),
-        (Join-Path $env:LOCALAPPDATA "Programs\Android Studio\jbr")
-    )
-    foreach ($jbr in $studioJbrCandidates) {
-        if ($jbr -and (Test-Path (Join-Path $jbr "bin\java.exe"))) {
-            $env:JAVA_HOME = $jbr
-            $env:Path = "$jbr\bin;$env:Path"
-            $javaExe = Join-Path $jbr "bin\java.exe"
-            break
-        }
-    }
+    throw "JDK 17 bootstrap failed: java.exe was not found after extraction."
 }
-if (-not $javaExe) {
-    throw "Java/JDK was not found. Install Android Studio with its bundled JBR, or set JAVA_HOME."
-}
+
+$javaBin = Split-Path -Parent $javaExe
+$env:JAVA_HOME = Split-Path -Parent $javaBin
+$env:Path = "$javaBin;$env:Path"
+
 Write-Host "Using Java: $javaExe"
 & $javaExe -version
 
