@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.redplay.iptv.data.*
 import com.redplay.iptv.player.VlcPlayerController
 
+@Composable
 fun RedPlayApp(vm: RedPlayViewModel, player: VlcPlayerController) {
     val state by vm.state.collectAsState()
     val playerState by player.snapshot.collectAsState()
@@ -84,5 +85,3 @@ fun TopBar(state: RedPlayUiState, vm: RedPlayViewModel) {
         FocusButton("↻", onClick = vm::refresh, compact = true)
     }
 }
-
-@Composable
