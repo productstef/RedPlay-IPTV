@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@Composable
 fun FocusButton(text: String, onClick: () -> Unit, compact: Boolean = false, modifier: Modifier = Modifier, enabled: Boolean = true) {
     FocusSurface(onClick = onClick, modifier = modifier, enabled = enabled) {
         Box(Modifier.height(if (compact) 38.dp else 46.dp).padding(horizontal = if (compact) 10.dp else 16.dp), contentAlignment = Alignment.Center) {
