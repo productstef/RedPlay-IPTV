@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.redplay.iptv.data.*
 
+@Composable
 fun ProviderChannelRail(state: RedPlayUiState, vm: RedPlayViewModel, modifier: Modifier) {
     Column(modifier.background(RedPlayPanel).border(1.dp, RedPlayBorder).padding(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -97,5 +98,3 @@ fun GroupSelector(state: RedPlayUiState, vm: RedPlayViewModel) {
         }
     }
 }
-
-@Composable
