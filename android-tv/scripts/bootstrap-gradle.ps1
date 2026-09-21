@@ -9,8 +9,7 @@ $zip = Join-Path $cache "gradle-$version-bin.zip"
 # The current Android Studio JBR can be newer than Gradle/AGP supports.
 # RedPlay's Android build is pinned to JDK 17 for predictable Windows + CI builds.
 $jdkRoot = Join-Path $cache "jdk-17"
-$javaExe = Get-ChildItem -Path $jdkRoot -Filter java.exe -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -match '\bin\java.exe$' } |
+$javaExe = Get-ChildItem -Path $jdkRoot -Filter java.exe -Recurse -File -ErrorAction SilentlyContinue |
     Select-Object -First 1 -ExpandProperty FullName
 
 if (-not $javaExe) {
@@ -23,8 +22,7 @@ if (-not $javaExe) {
     Expand-Archive -Path $jdkZip -DestinationPath $jdkRoot -Force
     Remove-Item $jdkZip -Force
 
-    $javaExe = Get-ChildItem -Path $jdkRoot -Filter java.exe -Recurse |
-        Where-Object { $_.FullName -match '\bin\java.exe$' } |
+    $javaExe = Get-ChildItem -Path $jdkRoot -Filter java.exe -Recurse -File |
         Select-Object -First 1 -ExpandProperty FullName
 }
 
