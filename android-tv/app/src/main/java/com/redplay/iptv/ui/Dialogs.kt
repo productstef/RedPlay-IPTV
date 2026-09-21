@@ -19,6 +19,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.redplay.iptv.data.*
 
+@Composable
 fun LibraryDialog(state: RedPlayUiState, vm: RedPlayViewModel) {
     Dialog(onDismissRequest = vm::closeLibrary, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.92f), color = RedPlayBackground, shape = RoundedCornerShape(10.dp), border = androidx.compose.foundation.BorderStroke(1.dp, RedPlayBorder)) {
@@ -112,5 +113,3 @@ fun ProviderDialog(vm: RedPlayViewModel) {
         }
     }
 }
-
-@Composable
