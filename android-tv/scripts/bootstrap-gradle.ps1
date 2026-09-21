@@ -1,7 +1,7 @@
 param([switch]$Build)
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$version = "9.6.0"
+$version = "8.13"
 $cache = Join-Path $root ".gradle-bootstrap"
 $home = Join-Path $cache "gradle-$version"
 $zip = Join-Path $cache "gradle-$version-bin.zip"
