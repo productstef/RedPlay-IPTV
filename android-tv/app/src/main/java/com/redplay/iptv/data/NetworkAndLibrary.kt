@@ -35,17 +35,28 @@ object RedPlayNetwork {
     }
 
     fun assetExists(url: String, headers: Map<String, String>): Boolean {
-        fun attempt(method: String, useRange: Boolean): Boolean = runCatching {
+        fun status(method: String, useRange: Boolean): Int? = runCatching {
             val c = open(url, method, headers)
             if (useRange) c.setRequestProperty("Range", "bytes=0-0")
             c.connectTimeout = 4500
             c.readTimeout = 4500
-            c.connect()
-            val ok = c.responseCode in 200..299 || c.responseCode == 206
-            c.disconnect()
-            ok
-        }.getOrDefault(false)
-        return attempt("HEAD", false) || attempt("GET", true)
+            try {
+                c.connect()
+                c.responseCode
+            } finally {
+                c.disconnect()
+            }
+        }.getOrNull()
+
+        val head = status("HEAD", false)
+        if (head != null && head in 200..299) return true
+        // A definite "not found" must not trigger another slow GET probe. This is
+        // important for the Library because it checks several possible extensions.
+        if (head == HttpURLConnection.HTTP_NOT_FOUND || head == HttpURLConnection.HTTP_GONE) return false
+
+        // Some IPTV/file hosts reject HEAD even though a ranged GET works.
+        val get = status("GET", true)
+        return get != null && (get in 200..299 || get == HttpURLConnection.HTTP_PARTIAL)
     }
 
     private fun open(url: String, method: String, headers: Map<String, String>): HttpURLConnection {
