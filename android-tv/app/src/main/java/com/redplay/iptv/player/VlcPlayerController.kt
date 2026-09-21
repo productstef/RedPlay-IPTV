@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
+import org.videolan.libvlc.interfaces.IMedia
 import org.videolan.libvlc.util.VLCVideoLayout
 
 class VlcPlayerController(context: Context) {
@@ -88,7 +89,7 @@ class VlcPlayerController(context: Context) {
         request.localSubtitlePath?.let { path ->
             // Missing sidecar subtitles are intentionally non-fatal. This is only called
             // after the library probe/download succeeded.
-            runCatching { player.addSlave(Media.Slave.Type.Subtitle, path, true) }
+            runCatching { player.addSlave(IMedia.Slave.Type.Subtitle, path, true) }
         }
         update(loading = true, error = "")
     }
@@ -148,7 +149,7 @@ class VlcPlayerController(context: Context) {
         val audio = player.audioTracks?.map { TrackOption(it.id, it.name ?: "Audio ${it.id}") }.orEmpty()
         val subs = player.spuTracks?.map { TrackOption(it.id, it.name ?: if (it.id == -1) "Off" else "Subtitle ${it.id}") }.orEmpty()
         _snapshot.value = _snapshot.value.copy(
-            audioTracts = audio,
+            audioTracks = audio,
             selectedAudio = player.audioTrack,
             subtitleTracks = if (subs.any { it.id == -1 }) subs else listOf(TrackOption(-1, "Off")) + subs,
             selectedSubtitle = player.spuTrack,
